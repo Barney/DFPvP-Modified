@@ -77,5 +77,89 @@ The code to place under each is:
 ```cs
 A_Master.instance.SaveModSettings();
 ```
+## 12. SFSMultiplayer Edit
+Proceed to SFSMultiplayer found in Assembly-CSharp-firstpass, then to the parseData method. Copy/Paste the following code under this line:
+```cs
+char c = '$';
+```
+Code to Copy:
+```cs
+if (A_PvPClass.isEnabledAndNotNull() && message.Contains("PvPUpdate"))
+	{
+		try
+		{
+			A_Master.instance.WriteToOutputLog("PvPUpdate Received! Message: " + message);
+			string[] array = message.Split(new char[]
+			{
+				'^'
+			});
+			if (!A_PvPClass.instance.getPlayersOnScreen().ContainsKey(sender.GetName()))
+			{
+				A_PvPClass.instance.getPlayersOnScreen().Add(sender.GetName(), new A_PlayerClass(sender.GetName(), int.Parse(array[1]), int.Parse(array[2]), sender.GetId()));
+			}
+			else
+			{
+				A_PlayerClass a_PlayerClass = A_PvPClass.instance.getPlayersOnScreen()[sender.GetName()];
+				a_PlayerClass.setHP(int.Parse(array[1]));
+				a_PlayerClass.setArmour(int.Parse(array[2]));
+				a_PlayerClass.setUserID(sender.GetId());
+				A_PvPClass.instance.getPlayersOnScreen()[sender.GetName()] = a_PlayerClass;
+			}
+			if (array.Length == 7)
+			{
+				A_DMGNum a_DMGNum = (A_DMGNum)new GameObject("newDMGNumGO").AddComponent(typeof(A_DMGNum));
+				a_DMGNum.damageCritValue = float.Parse(array[3]);
+				a_DMGNum.damageValue = float.Parse(array[3]);
+				a_DMGNum.numberScreenPosition = Camera.mainCamera.WorldToScreenPoint(new Vector3(float.Parse(array[3]), float.Parse(array[4]), float.Parse(array[5])));
+			}
+		}
+		catch (Exception ex)
+		{
+			A_Master.instance.WriteToOutputLog("Error in SFSMultiplayer PvPUpdate: " + ex.StackTrace);
+		}
+		return false;
+	}
+```
+Then, in the JoinInstance method, paste the following code under the following lines. This code simply tells us all the players in the instance.
 
+**Change1**
+Place under:
+```cs
+this.smartFoxHandler.SendMessage("SystemMessage", "Entering new area instance...");
+```
 
+**Change 2**
+Place under:
+```cs
+this.smartFoxHandler.SendMessage("SystemMessage", "Changing instance to meet " + this.MPInstanceFollow + "...");
+```
+
+Code to Copy:
+```cs
+this.smartFoxHandler.SendMessage("SystemMessage", userList.Count - 1 + " users in instance: " + text.Trim().TrimEnd(new char[]
+		{
+			','
+		}));
+```
+**Note:** You will get an error regarding enumerator2, replace this block with the following.
+```cs
+foreach(string a in lastPlayersMet.Keys) {
+	if(a == user.GetName()) {
+		num3 += 2;
+	}
+}
+```
+## 13. SmartFoxHandler Edit
+Proceed to SmartFoxHandler's HandleUserEnterRoom method and paste the following code at the top. This sets our countdown for PvPUpdate to send updates when a user joins the room, it is done this way to prevent multiple users joining at once and causing a crash.
+```cs
+try
+	{
+		if (A_PvPClass.isEnabledAndNotNull())
+		{
+			A_PvPClass.instance.setCountdown(2);
+		}
+	}
+	catch (Exception)
+	{
+	}
+```
