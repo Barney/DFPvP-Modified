@@ -1,7 +1,7 @@
 # DFPvP-Modified
 ## Personal Install Guide
 Step by step guide to building the modpack up, since some features are so intertwined into other obfuscated classes this **is** necesasry.
-### 1. Add A_Master Class
+## 1. Add A_Master Class
 #### Required:
 1. Find obfuscated settings menu check in DFHUD.
 #### Errors:
@@ -15,53 +15,67 @@ A_Master.modsObject.AddComponent<A_PvPClass>();
 A_Master.modsObject.AddComponent<A_AggroWarning>();
 A_Master.modsObject.AddComponent<A_ColourCloak>();
 ```
-### 2. Add A_ColourCloak Class
+## 2. Add A_ColourCloak Class
 This class should work just copy/paste.
-### 3. Add A_AggroWarning Class
+## 3. Add A_AggroWarning Class
 #### Required:
-1. Find obfuscated colours from DFHUD.
-2. Find obfuscated rushSize variable (easy)
+1. Find obfuscated rushSize variable (easy)
 #### Errors:
-Note: DetermineAggroBarColor(float) will throw an error, find the obfuscated colour variables in DFHUD prior, they should look like this.
+Note: OnGUI() will throw an error, find obfuscated rushSize.
 ```cs
-if (valuePercentage >= 75f)
-	{
-		GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
-	}
-	if (valuePercentage < 75f)
-	{
-		GUI.color = DFHUD.DF34_eb1fb5fe60de11ea9450b18f9ccd7641e37238f4;
-	}
-	if (valuePercentage < 50f)
-	{
-		GUI.color = DFHUD.DF34_aca8da775e5959b078124746cf86066951509f6f;
-	}
-	if (valuePercentage < 25f)
-	{
-		GUI.color = DFHUD.DF34_85f394d56c31be1061070c29f6070fb7542127c7;
-	}
-  ```
-Note: OnGUI() will throw an error, find obfuscated rushSize and RED colour prior, the lines look like this.
-```cs
-GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
 string text = "Zombies Remaining: " + DF34_68ac6f88d0583a466fc24ef7af066ef0e96db03d.rushSize.ToString();
 ```
 Note: Update() will throw an error, find obfuscated rushSize prior, the line looks like this.
 ```cs
 this.aggroWarningBarLength = (float)DF34_68ac6f88d0583a466fc24ef7af066ef0e96db03d.rushSize / (float)this.maxAggro * 100f;
 ```
-### 4. Add A_PlayerClass
+## 4. Add A_PlayerClass
 This is more of a struct and is just a copy paste, required before adding A_PvPClass.
-### 5. Add A_PvPClass
+## 5. Add A_PvPClass
 #### Required:
-1. Find the RED colour in DFHUD, we found this above, just replace it.
 2. Find the Obfuscated method that converts object obfuscated strings to english. (Searching strings should make this easy)
 3. Find the DFHUD variables for Health and Armour (Search the HP/Armour Bar to make this easy)
 #### Errors:
 Note: PvPUpdate() will throw errors, many are replacing obfuscated variables with the new ones listed above.
-
-### 6. GlobalPlayerManifest Edit
-Proceed to GlobalPlayerManifest's Awake() method and add the following line at the top.
+## 6. Add A_DMGNum Class
+Simple Copy/Paste.
+## 7. Add A_Tracer Class
+Simply Copy/Paste.
+## 8. GlobalPlayerManifest Edit
+Proceed to GlobalPlayerManifest's Awake() method and add the following line at the top. We need this to load our Master class.
 ```cs
 new GameObject("ModManagersGO").AddComponent(typeof(A_Master));
 ```
+## 9. A_Master Edit
+Proceed to LoadMods() in A_Master and add the following lines back. We need this to load the mods.
+```cs
+A_Master.modsObject.AddComponent<A_PvPClass>();
+A_Master.modsObject.AddComponent<A_AggroWarning>();
+A_Master.modsObject.AddComponent<A_ColourCloak>();
+```
+## 10. HUD Edit
+Proceed to HUD's Awake() method and add the following code at the top. We need this to assign barTexture in the master class.
+```cs
+try {
+	A_Master.barTexture = this.barTexture;
+}
+catch (Exception) {}
+```
+## 11. DFHUD Edit
+Proceed to DFHUD, we need to place our SaveSettings() call inside the settings menu "Done" and Escape/F1 checks.
+Tip: Search the "Done" obfuscated string in Analyzer until you find the GUI.Button check for it that looks like the following, we should place 2 SaveModSettings Statement under each check at the top.
+
+**Check1:**
+```cs
+if (GUI.Button(new Rect((float)(Screen.width / 2 - 50), (float)(Screen.height / 2 - 155 + 20 + 20 + 50 + 50 + 50 + 50 + 30 + 25 + 10 + 25), 100f, 40f), DF34_cb3702026e3b238888511d123c370319a167f1b3.DF34_29a493389248ee1d36499e9e02a3e6e1ef7af5dcf()) && DFHUD.DF34_c61d5d65b34a63e819842df7084e3d207f0d9eb8 == 0)
+```
+**Check2:** (Right below it)
+```cs
+if ((Input.GetKey(KeyCode.Escape) || Input.GetKey(KeyCode.F1)) && !DF34_62a1ed6e520076729e120dcd3be015a26e74abc0.DF34_5cbe0a8fc1a58790e94b00f10e5185ba8893149c)
+```
+The code to place under each is:
+```cs
+A_Master.instance.SaveModSettings();
+```
+
+
