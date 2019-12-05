@@ -159,6 +159,10 @@ public class A_PvPClass : MonoBehaviour
 	private void OnEnable()
 	{
 		A_Master.instance.WriteToOutputLog("PvP Features have been enabled!");
+		this.lastHP = 0;
+		this.lastUpdateValues = new string[3];
+		this.countdown = 0;
+		this.playersOnScreen = new Dictionary<string, A_PlayerClass>(20)
 		base.StartCoroutine(this.PvPUpdate());
 	}
 
@@ -166,9 +170,6 @@ public class A_PvPClass : MonoBehaviour
 	private void OnDisable()
 	{
 		A_Master.instance.WriteToOutputLog("PvP Features have been disabled!");
-		this.lastHP = 0;
-		this.lastUpdateValues = new string[3];
-		this.countdown = 0;
 		base.StopAllCoroutines();
 	}
 
