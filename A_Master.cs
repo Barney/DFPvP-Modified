@@ -217,6 +217,7 @@ public class A_Master : MonoBehaviour
 	public bool getFullEXP(){ return this.displayFullEXP; }
 	public bool getLevelCapEXP(){ return this.displayLevelCapEXP; }
 	public bool getPermaDaytime(){ return this.permaDaytime; }
+	public bool isPlayerAFK() { return this.playerIsAFK; }
 	public Camera getMainCamera(){ return this.mainCamera; }
 	public GameObject getMainPlayer(){ return this.player0GameObject; }
 	
@@ -226,8 +227,9 @@ public class A_Master : MonoBehaviour
 	//Main Player Game Object. Assigned by GetReferenceToPlayerGameObject()
 	private GameObject player0GameObject;
 
-	//Toggles true/false depending on the player mass, assigned by CheckPlayerAFKState()
-	private bool playerIsAFK;
+	/*Toggles true/false depending on the player mass, assigned by CheckPlayerAFKState()
+	We default to true because the player is AFK even though it doesnt exist yet.*/
+	private bool playerIsAFK = true;
 
   //Reference to the main camera, assigned by GetReferenceToPlayerGameObject()
 	private Camera mainCamera;
