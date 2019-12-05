@@ -88,6 +88,15 @@ The code to place under each is:
 ```cs
 A_Master.instance.SaveModSettings();
 ```
+
+Next, we need to find the "Done" button for when we exit the inventory, this can be found by searching the "Done" obfuscated string. Once we find it, place the following code inside it, this is used to update the rainbow cloak if a user switches jackets.
+```cs
+if (A_ColourCloak.isEnabledAndNotNull())
+				{
+					A_ColourCloak.instance.UpdateSelectedSkinnedMeshRenderer();
+				}
+}
+```
 ## 13. SFSMultiplayer Edit
 Proceed to SFSMultiplayer found in Assembly-CSharp-firstpass, then to the parseData method. Copy/Paste the following code under this line:
 ```cs
