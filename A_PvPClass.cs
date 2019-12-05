@@ -162,7 +162,7 @@ public class A_PvPClass : MonoBehaviour
 		this.lastHP = 0;
 		this.lastUpdateValues = new string[3];
 		this.countdown = 0;
-		this.playersOnScreen = new Dictionary<string, A_PlayerClass>(20)
+		this.playersOnScreen = new Dictionary<string, A_PlayerClass>(20);
 		base.StartCoroutine(this.PvPUpdate());
 	}
 
