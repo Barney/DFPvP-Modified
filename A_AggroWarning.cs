@@ -101,12 +101,6 @@ public class A_AggroWarning : MonoBehaviour
 		A_Master.instance.WriteToOutputLog("ERROR in A_AggroWarning: " + message);
 	}
 
-	//Position of the aggro bar.
-	private Vector2 pos = new Vector2((float)Screen.width / 2f - 125f, (float)Screen.height / 2f - 25f);
-
-	//Size of the aggro bar.
-	private Vector2 size = new Vector2(100f, 20f);
-
 	//Aggro spikes can only have a max of 150.
 	private int maxAggro = 150;
 
