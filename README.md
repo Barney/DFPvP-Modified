@@ -240,3 +240,37 @@ if (A_Master.instance != null && A_Master.instance.getPermaDaytime() && (DF34_b7
 			DF34_b71f8c6d9e8cebcd927647c37613dec5027216f2 = "day";
 		}
 ```
+## 17. Full EXP and Level Cap EXP Implementation - Pending
+Code to Paste:
+```cs
+if (!A_Master.instance.getFullEXP())
+		{
+			DFHUD.DF34_1e8ba35c94b7ed9f0f78d02c4e5aab2e69908181 = DF34_cb3702026e3b238888511d123c370319a167f1b3.Join3(DF34_cb3702026e3b238888511d123c370319a167f1b3.DF34_ec06215335cd6853a9cce79082c3c4d97b042756f(), DFHUD.DF34_25dd8dcab024c3c7064631db8c5e96a14a306d63.ToString(), "%");
+		}
+		else
+		{
+			DFHUD.DF34_1e8ba35c94b7ed9f0f78d02c4e5aab2e69908181 = string.Concat(new string[]
+			{
+				"Exp: ",
+				UnityBuiltins.parseFloat(DF34_4023fe61a75ee0013a4faf828c9b0c88ce3c3bef.DF34_830bbe668bdf0a93412e1253e38b452f191dac88(DF34_cb3702026e3b238888511d123c370319a167f1b3.DF34_479a0e7e297b359135fad6954b97e56afaeab3f7f())).ToString("N0"),
+				" / ",
+				UnityBuiltins.parseFloat(num4).ToString("N0"),
+				" (",
+				num5.ToString("F1"),
+				"%)"
+			});
+		}
+```
+And:
+
+```cs
+if (num4 == -1f || DFHUD.DF34_25dd8dcab024c3c7064631db8c5e96a14a306d63 == -1)
+		{
+			if (!A_Master.instance.getLevelCapEXP())
+			{
+				DFHUD.DF34_1e8ba35c94b7ed9f0f78d02c4e5aab2e69908181 = DF34_cb3702026e3b238888511d123c370319a167f1b3.DF34_1d1b2ba6055439a95c9aa77f1cc32465f516b1dbf();
+				return;
+			}
+			DFHUD.DF34_1e8ba35c94b7ed9f0f78d02c4e5aab2e69908181 = "EXP: " + (ulong.Parse(DF34_4023fe61a75ee0013a4faf828c9b0c88ce3c3bef.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("MainPlayerStats_df_exp")) + (float)num).ToString("N0");
+		}
+```
