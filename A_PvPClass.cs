@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+///<summary> This class controls the PvP Mod's behaviour, its functionality depends on code implemented inside SFSMultiplayer's
+///parseData method.</summary>
 public class A_PvPClass : MonoBehaviour
 {
 	private void Awake()
@@ -11,6 +13,7 @@ public class A_PvPClass : MonoBehaviour
 		{
 			A_PvPClass.instance = this;
 			A_Master.instance.WriteToOutputLog("PvP Class initialized.");
+			base.enabled = false;
 		}
 		else if (A_PvPClass.instance != this)
 		{
@@ -19,195 +22,183 @@ public class A_PvPClass : MonoBehaviour
 		UnityEngine.Object.DontDestroyOnLoad(base.gameObject);
 	}
 
-  //Checks for health change every 2 minutes and prepare a SmartFox game update to send that change since damage dealt between the two clients is not accurate.
+	///<summary> When PvP Updates are enabled, this enumerator runs every second sending HP updates if the player isn't AFK or
+	///if they receive damage, an HP update and a damage update. This Update can either have 3 indexes (0,health,armour) or 7
+	///indexes (0,health,armour,damagedealt,x,y,z)</summary>
 	private IEnumerator PvPHPUpdate()
 	{
+		
 		for (;;)
 		{
-      //Check for other users and ensure the player data is properly loaded since this script is loaded on startup.
-			if (((SFSMultiplayer)GameObject.Find("SmartFoxObject").GetComponent(typeof(SFSMultiplayer))).UsersInInstance.Count > 0 && !DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Health").Equals("-1"))
+		try
+		{	//If multiplayer exists, we are not alone and our HP was properly initialized, run.
+			if (this.smartFoxObject != null && this.smartFoxObject.UsersInInstance.Count > 0 && !DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Health").Equals("-1"))
 			{
-      //These two obfuscated integers are the percentage value for health and armour, we send these to display the bars.
-				string text = DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0.ToString();
-				string text2 = DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db.ToString();
-        
-        //Separator is a carror, PvPUpdate is the header the Smartfox parser checks for our special gameplay update.
-				this.SendUpdate(string.Concat(new string[]
+				//If we haven't ever sent a PvPUpdate, update our lastHP and send an update.
+				if (this.lastHP == 0)
 				{
-					"PvPUpdate^",
-					text,
-					"^",
-					text2
-				}));
-        
-        //I don't believe I use this, reminder to delete later.
-				this.lastUpdateValues[0] = text;
-				this.lastUpdateValues[1] = text2;
+					//Full HP = Health + Armour
+					this.lastHP = DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0 + DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db;
+					this.SendUpdate("PvPUpdate^" + DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0.ToString() + "^" + DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db.ToString());
+					A_Master.instance.WriteToOutputLog("Sent first PvPUpdate.");
+				}
+				else
+				{
+					//Full HP = Health + Armour
+					int num = DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0 + DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db;
+					//If our HP has changed from the last, prepare a damage number update.
+					if (this.lastHP != num)
+					{
+						string hp = DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0.ToString();
+						string armour = DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db.ToString();
+						string damage = (this.lastHP - num).ToString();
+						Vector3 position = A_Master.instance.getMainPlayer().transform.position;
+						string str3 = position.x.ToString();
+						string str2 = "^4^";
+						position = A_Master.instance.getMainPlayer().transform.position;
+						string damagePos = str3 + str2 + position.z.ToString();
+						this.SendUpdate(string.Concat(new string[]
+						{
+							"PvPUpdate^",
+							hp,
+							"^",
+							armour,
+							"^",
+							damage,
+							"^",
+							damagePos
+						}));
+						//Update the last values after we send.
+						this.lastHP = num;
+						this.lastUpdateValues[0] = hp;
+						this.lastUpdateValues[1] = armour;
+						A_Master.instance.WriteToOutputLog("Damage detected, sent PvPUpdate.");
+					}
+					/*If the Player isn't AFK but hasn't received any damage, we continuously send health only updates
+					//incase more users join.*/
+					else if (!A_Master.instance.isPlayerAFK())
+					{
+						this.SendUpdate("PvPUpdate^" + DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0.ToString() + "^" + DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db.ToString());
+						A_Master.instance.WriteToOutputLog("Sent PvP update as player is not AFK.");
+					}
+				}
 			}
-			yield return new WaitForSeconds(2f);
 		}
-		yield break;
+		catch (Exception ex)
+		{
+			this.SendError("PvPHPUpdate() - " + ex.StackTrace);
+		}
+		//Loop every second.
+		yield return new WaitForSeconds(1f);
+	}
+	yield break;
 	}
 
-	//Calls the Smartfox UserUpdate method to send the data.
+	///<summary>Method which calls the multiplayer SendUserUpdate with our custom update.</summary>
 	private void SendUpdate(string text)
 	{
 		try
 		{
-			((SFSMultiplayer)GameObject.Find("SmartFoxObject").GetComponent(typeof(SFSMultiplayer))).SendUserUpdate(text);
+			this.smartFoxObject.SendUserUpdate(text);
 		}
 		catch (Exception ex)
 		{
-			A_Master.instance.WriteToOutputLog("ERROR: " + ex.StackTrace);
+			this.SendError("SendUpdate() - " + ex.StackTrace);
 		}
 	}
 
-	//Used to determine DF's colour based on percentage but currently this isn't used.
-	private void DetermineBarColor(float a)
-	{
-		if (a >= 75f)
-		{
-			GUI.color = DFHUD.DF34_85f394d56c31be1061070c29f6070fb7542127c7;
-			return;
-		}
-		if (a < 75f)
-		{
-			GUI.color = DFHUD.DF34_aca8da775e5959b078124746cf86066951509f6f;
-			return;
-		}
-		if (a < 50f)
-		{
-			GUI.color = DFHUD.DF34_eb1fb5fe60de11ea9450b18f9ccd7641e37238f4;
-			return;
-		}
-		if (a < 25f)
-		{
-			GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
-		}
-	}
-
+	///<summary> OnGUI() in A_PvPClass displays the name,health, and armour of each user sending PvPUpdates below the minimap.</summary>
 	private void OnGUI()
 	{
-    
-		float num = 200f;
-		GUIStyle guistyle = new GUIStyle();
-		guistyle.font = DFHUD.hudFont;
-		guistyle.normal.textColor = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
-		new GUIStyle().font = DFHUD.miniFont;
-    
-    //We need to draw the HUD for each user in the instance that is using the modified client.
-		foreach (KeyValuePair<string, A_PlayerClass> keyValuePair in this.playersOnScreen)
+		try
 		{
-			if (((SFSMultiplayer)GameObject.Find("SmartFoxObject").GetComponent(typeof(SFSMultiplayer))).UsersInInstance.Contains(keyValuePair.Value.userID))
+			
+			float num = 200f;
+			GUIStyle guistyle = new GUIStyle();
+			guistyle.font = DFHUD.hudFont;
+			guistyle.normal.textColor = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
+			new GUIStyle().font = DFHUD.miniFont;
+			
+			//For each user who sent us a pvpupdate at some point...
+			foreach (KeyValuePair<string, A_PlayerClass> keyValuePair in this.playersOnScreen)
 			{
-				A_PlayerClass value = keyValuePair.Value;
-				GUI.Label(new Rect((float)(Screen.width - 165), num, 100f, 20f), value.name, guistyle);
-				num += 20f;
-				GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
-				GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.hp, 5f), A_PvPClass.barTexture);
-				num += 10f;
-				GUI.color = Color.cyan;
-				GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.armour, 5f), A_PvPClass.barTexture);
-				GUI.color = Color.white;
-				num += 20f;
-			}
-		}
-	}
-
-	//This enumerator checks every second for damage taken and sends a different gameplay update with the damage taken.
-	private IEnumerator PvPHitTaken()
-	{
-		for (;;)
-		{
-			if (((SFSMultiplayer)GameObject.Find("SmartFoxObject").GetComponent(typeof(SFSMultiplayer))).UsersInInstance.Count > 0 && !DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Health").Equals("-1"))
-			{
-       //Initialization
-				if (this.lastHP == 0)
+				/*If we are connected to multiplayer and this user is also in the multiplayer instance with us, display their data.
+				We never remove players, but if they leave and rejoin their data is simply updated with every update.*/
+				if (this.smartFoxObject != null && this.smartFoxObject.UsersInInstance.Contains(keyValuePair.Value.getUserID()))
 				{
-					this.lastHP = int.Parse(DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Health")) + int.Parse(DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Armour"));
-				}
-				else
-				{
-          //Calculate current total health by adding HP + Armour together.
-					int current = int.Parse(DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Health")) + int.Parse(DF34_6d6b8d6e9c7a8c0b2348af0e038e8df6d0752dd4.DF34_830bbe668bdf0a93412e1253e38b452f191dac88("GameplayStats_Armour"));
-					if (this.lastHP != current)
-					{
-            //Send the damage taken and the current player position since we're going to display a damage number where the hit actually occurred.
-						string text = (this.lastHP - current).ToString();
-						string text2 = string.Concat(new object[]
-						{
-							"(",
-							this.mainPlayer.transform.position.x,
-							",",
-							2,
-							",",
-							this.mainPlayer.transform.position.z,
-							")"
-						});
-            
-            //PvPHit is the header for this one, carrot character to split again.
-						this.SendUpdate(string.Concat(new string[]
-						{
-							"PvPHit^",
-							text,
-							"^",
-							text2
-						}));
-            //Update lastHP after the update was sent out.
-						this.lastHP = current;
-					}
+					//Draw their data on the screen.
+					A_PlayerClass value = keyValuePair.Value;
+					GUI.Label(new Rect((float)(Screen.width - 165), num, 165f, 20f), value.getName(), guistyle);
+					num += 20f;
+					GUI.color = Color.cyan;
+					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getArmour(), 5f), A_PvPClass.barTexture);
+					num += 10f;
+					GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
+					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getHP(), 5f), A_PvPClass.barTexture);
+					GUI.color = Color.white;
+					num += 20f;
 				}
 			}
-			yield return new WaitForSeconds(1f);
 		}
-		yield break;
-	}
-
-	//Get the reference to the main player gameobject, called in the update.
-	private void GetReferenceToPlayer()
-	{
-		if (this.mainPlayer == null)
+		catch (Exception ex)
 		{
-			this.mainPlayer = GameObject.Find("Player0");
+			this.SendError("OnGUI() - " + ex.StackTrace);
 		}
 	}
 
-	private void Update()
-	{
-		this.GetReferenceToPlayer();
-	}
-
-	//Modular enable/disable so the client acts normal when disabled.
+	///<summary>Method used to make sure the Mod Component is created and the mod is enabled.</summary>
 	public static bool isEnabledAndNotNull()
 	{
 		return A_PvPClass.instance != null && A_PvPClass.instance.enabled;
 	}
 
+	///<summary>OnEnable() in A_PvPClass starts the update enumerators.</summary>
 	private void OnEnable()
 	{
 		A_Master.instance.WriteToOutputLog("PvP Features have been enabled!");
-		base.StartCoroutine(this.PvPHPUpdate());
-		base.StartCoroutine(this.PvPHitTaken());
+		base.StartCoroutine(this.PvPUpdate());
 	}
+
+	///<summary>OnDisable() in A_PvPClass stops all the enumerators.</summary>
 	private void OnDisable()
 	{
 		A_Master.instance.WriteToOutputLog("PvP Features have been disabled!");
 		base.StopAllCoroutines();
 	}
 
-  //singleton
+	///<summary>Update() in A_PvPClass finds the SFSMultiplayer Object if it doesn't exist.</summary>
+	private void Update()
+	{
+		if (this.smartFoxObject == null)
+		{
+			this.smartFoxObject = (SFSMultiplayer)GameObject.Find("SmartFoxObject").GetComponent(typeof(SFSMultiplayer));
+		}
+	}
+
+	///<summary>Method for Debugging that puts the class name.</summary>
+	private void SendError(string message)
+	{
+		A_Master.instance.WriteToOutputLog("ERROR in A_PvPClass: " + message);
+	}
+
+	//Getter for the player dictionary.
+	public Dictionary<string, A_PlayerClass> getPlayersOnScreen(){ return this.playersOnScreen; }
+
+	//Singleton instance.
 	public static A_PvPClass instance;
 
-	//unused iirc
-	public string[] lastUpdateValues = new string[3];
+	//Srray storing the last update values of a PvPUpdate.
+	private string[] lastUpdateValues = new string[3];
 
-	//All players currently in the instance using the client.
-	public Dictionary<string, A_PlayerClass> playersOnScreen = new Dictionary<string, A_PlayerClass>(20);
+	//Dictionary storing Players who entered our instance with the modpack.
+	private Dictionary<string, A_PlayerClass> playersOnScreen = new Dictionary<string, A_PlayerClass>(20);
 
-	//initialized by the HUD class.
+	//Bar Texture, Move this to Master.
 	public static Texture2D barTexture;
 
+	//Integer storing the lastHP update.
 	private int lastHP;
-  
-	public GameObject mainPlayer;
+
+	//Holder for the SmartFox object.
+	private SFSMultiplayer smartFoxObject;
 }
