@@ -130,7 +130,7 @@ public class A_Master : MonoBehaviour
 	}
 
 	///<summary>Method used to create and print the header of the output log when the game is started.</summary>
-	public void OutputLogStartup()
+	private void OutputLogStartup()
 	{
 		StreamWriter streamWriter = new StreamWriter(Application.persistentDataPath + "/OutputLog.txt", false);
 		streamWriter.WriteLine("Dead Frontier Modpack Output Log");
@@ -210,45 +210,55 @@ public class A_Master : MonoBehaviour
 		}
 	}
 
+	//Getters for toggles that need to be accessed outside the class.
+	public bool getTracers(){ return this.displayBulletTracers; }
+	public bool getDMGNumbers(){ return this.displayDMGNumbers; }
+	public bool getColourCloak(){ return this.colourCloak; }
+	public bool getFullEXP(){ return this.displayFullEXP; }
+	public bool getLevelCapEXP(){ return this.displayLevelCapEXP; }
+	public bool getPermaDaytime(){ return this.permaDaytime; }
+	public Camera getMainCamera(){ return this.mainCamera; }
+	public GameObject getMainPlayer(){ return this.player0GameObject; }
+	
 	//Singleton instance of the master class. Assigned by Awake()
 	public static A_Master instance;
 
 	//Main Player Game Object. Assigned by GetReferenceToPlayerGameObject()
-	public GameObject player0GameObject;
+	private GameObject player0GameObject;
 
 	//Toggles true/false depending on the player mass, assigned by CheckPlayerAFKState()
-	public bool playerIsAFK;
+	private bool playerIsAFK;
 
   //Reference to the main camera, assigned by GetReferenceToPlayerGameObject()
-	public Camera mainCamera;
+	private Camera mainCamera;
 
   //Watermark stuff.
 	private Color watermarkColor = new Color(1f, 1f, 1f, 0.4f);
 	private GUIStyle watermarkStyle = new GUIStyle();
 
 	// GameObject containing all the mod classes. Assigned by Awake()
-	public static GameObject modsObject;
+	private static GameObject modsObject;
 
 	//Watermark String.
-	public const string modpackVersion = "V36 PvP Client V0.3";
+	private string modpackVersion = "V36 PvP Client V0.3";
 
   //Real Mod toggles.
-	public bool displayDMGNumbers;
-	public bool displayBulletTracers;
-	public bool displayFullEXP;
-	public bool displayLevelCapEXP;
-	public bool pvpFeatures;
-	public bool aggroBar;
-	public bool colourCloak;
-	public bool permaDaytime;
+	private bool displayDMGNumbers;
+	private bool displayBulletTracers;
+	private bool displayFullEXP;
+	private bool displayLevelCapEXP;
+	private bool pvpFeatures;
+	private bool aggroBar;
+	private bool colourCloak;
+	private bool permaDaytime;
 
 	//Temporary Mod toggles used in the settings menu.
-	public bool toggleDisplayDMGNumbers;
-	public bool toggleDisplayBulletTracers;
-	public bool toggleDisplayFullEXP;
-	public bool toggleDisplayLevelCapEXP;
-	public bool toggleAggroBar;
-	public bool togglepvpFeatures;
-	public bool toggleColourCloak;
-	public bool togglePermaDaytime;
+	private bool toggleDisplayDMGNumbers;
+	private bool toggleDisplayBulletTracers;
+	private bool toggleDisplayFullEXP;
+	private bool toggleDisplayLevelCapEXP;
+	private bool toggleAggroBar;
+	private bool togglepvpFeatures;
+	private bool toggleColourCloak;
+	private bool togglePermaDaytime;
 }
