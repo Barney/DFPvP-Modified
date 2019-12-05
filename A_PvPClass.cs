@@ -119,7 +119,7 @@ public class A_PvPClass : MonoBehaviour
 			float num = 200f;
 			GUIStyle guistyle = new GUIStyle();
 			guistyle.font = DFHUD.hudFont;
-			guistyle.normal.textColor = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
+			guistyle.normal.textColor = A_Master.RED;
 			new GUIStyle().font = DFHUD.miniFont;
 			
 			//For each user who sent us a pvpupdate at some point...
@@ -136,7 +136,7 @@ public class A_PvPClass : MonoBehaviour
 					GUI.color = Color.cyan;
 					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getArmour(), 5f), A_Master.barTexture);
 					num += 10f;
-					GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
+					GUI.color = A_Master.RED;
 					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getHP(), 5f), A_Master.barTexture);
 					GUI.color = Color.white;
 					num += 20f;
