@@ -266,4 +266,10 @@ public class A_Master : MonoBehaviour
 	private bool togglepvpFeatures;
 	private bool toggleColourCloak;
 	private bool togglePermaDaytime;
+	
+	//Colours so I don't need to go digging for them ever again.
+	public static Color RED = new Color(0.823f, 0.012f, 0f, 1f);
+	public static Color ORANGE = new Color(1f, 0.282f, 0f, 1f);
+	public static Color YELLOW = new Color(1f, 0.8f, 0f, 1f);
+	public static Color GREEN = new Color(0.07f, 1f, 0f, 1f);
 }
