@@ -74,13 +74,16 @@ public class A_PvPClass : MonoBehaviour
 						this.lastUpdateValues[1] = armour;
 						A_Master.instance.WriteToOutputLog("Damage detected, sent PvPUpdate.");
 					}
-					/*If the Player isn't AFK but hasn't received any damage, we continuously send health only updates
-					//incase more users join.*/
-					else if (!A_Master.instance.isPlayerAFK())
+					/*If the countdown is > 0 a player has entered the area, send updates to them */
+					else if (countdown > 0)
 					{
 						this.SendUpdate("PvPUpdate^" + DFHUD.DF34_7c1c08c1eb7fe9f98e5219e85a2b812c6285fce0.ToString() + "^" + DFHUD.DF34_1da8681ac7ff0526a20a20c66866e6b3b21216db.ToString());
-						A_Master.instance.WriteToOutputLog("Sent PvP update as player is not AFK.");
 					}
+				}
+				//If the countdown is > 0 we sent an update, subtract it by 1.
+				if (this.countdown > 0)
+				{
+					this.subtractCountdown();
 				}
 			}
 		}
@@ -180,6 +183,13 @@ public class A_PvPClass : MonoBehaviour
 	{
 		A_Master.instance.WriteToOutputLog("ERROR in A_PvPClass: " + message);
 	}
+	
+	//Setters for our countdown. setCountdown is called by SmartFoxHandler.HandleUserEnterRoom()
+	public void setCountdown(int num) { this.countdown = num; }
+	public void subtractCountdown() { 
+		if(this.countdown != 0) 
+			this.countdown--; 
+	}
 
 	//Getter for the player dictionary.
 	public Dictionary<string, A_PlayerClass> getPlayersOnScreen(){ return this.playersOnScreen; }
@@ -198,4 +208,7 @@ public class A_PvPClass : MonoBehaviour
 
 	//Holder for the SmartFox object.
 	private SFSMultiplayer smartFoxObject;
+	
+	//Used as a counter to send PvPUpdates after a user enters an area.
+	private int countdown;
 }
