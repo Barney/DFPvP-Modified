@@ -223,7 +223,13 @@ public class A_Master : MonoBehaviour
 	
 	//Singleton instance of the master class. Assigned by Awake()
 	public static A_Master instance;
-
+	
+	//Assigned by Awake() inside HUD class.
+	public static Texture2D barTexture;
+	
+	// GameObject containing all the mod classes. Assigned by Awake()
+	private static GameObject modsObject;
+	
 	//Main Player Game Object. Assigned by GetReferenceToPlayerGameObject()
 	private GameObject player0GameObject;
 
@@ -237,9 +243,6 @@ public class A_Master : MonoBehaviour
   //Watermark stuff.
 	private Color watermarkColor = new Color(1f, 1f, 1f, 0.4f);
 	private GUIStyle watermarkStyle = new GUIStyle();
-
-	// GameObject containing all the mod classes. Assigned by Awake()
-	private static GameObject modsObject;
 
 	//Watermark String.
 	private string modpackVersion = "V36 PvP Client V0.3";
