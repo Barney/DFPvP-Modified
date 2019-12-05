@@ -1,4 +1,13 @@
 # DFPvP-Modified
+**Research to do ahead of time:**
+1. Find Method which converts obfuscated strings to english.
+2. Find proper rushSize variable for the Aggro Bar.
+3. Find the check for if the settings menu is open. (In DFHUD)
+4. Find the two variables for Health / Armour HP in DFHUD.
+5. Find the RayCast class for weapons to implement DMG Numbers / Tracers.
+6. Find the Method controling the weather.
+7. I didn't include converting looting UI to include stats/colour since its alot of effort.
+
 ## Personal Install Guide
 Step by step guide to building the modpack up, since some features are so intertwined into other obfuscated classes this **is** necesasry.
 ## 1. Add A_Master Class
@@ -37,23 +46,25 @@ This is more of a struct and is just a copy paste, required before adding A_PvPC
 3. Find the DFHUD variables for Health and Armour (Search the HP/Armour Bar to make this easy)
 #### Errors:
 Note: PvPUpdate() will throw errors, many are replacing obfuscated variables with the new ones listed above.
-## 6. Add A_DMGNum Class
+## 6. Add ShadowAndOutlineClass
 Simple Copy/Paste.
-## 7. Add A_Tracer Class
+## 7. Add A_DMGNum Class
+Simple Copy/Paste.
+## 8. Add A_Tracer Class
 Simply Copy/Paste.
-## 8. GlobalPlayerManifest Edit
+## 9. GlobalPlayerManifest Edit
 Proceed to GlobalPlayerManifest's Awake() method and add the following line at the top. We need this to load our Master class.
 ```cs
 new GameObject("ModManagersGO").AddComponent(typeof(A_Master));
 ```
-## 9. A_Master Edit
+## 10. A_Master Edit
 Proceed to LoadMods() in A_Master and add the following lines back. We need this to load the mods.
 ```cs
 A_Master.modsObject.AddComponent<A_PvPClass>();
 A_Master.modsObject.AddComponent<A_AggroWarning>();
 A_Master.modsObject.AddComponent<A_ColourCloak>();
 ```
-## 10. HUD Edit
+## 11. HUD Edit
 Proceed to HUD's Awake() method and add the following code at the top. We need this to assign barTexture in the master class.
 ```cs
 try {
@@ -61,7 +72,7 @@ try {
 }
 catch (Exception) {}
 ```
-## 11. DFHUD Edit
+## 12. DFHUD Edit
 Proceed to DFHUD, we need to place our SaveSettings() call inside the settings menu "Done" and Escape/F1 checks.
 Tip: Search the "Done" obfuscated string in Analyzer until you find the GUI.Button check for it that looks like the following, we should place 2 SaveModSettings Statement under each check at the top.
 
@@ -77,7 +88,7 @@ The code to place under each is:
 ```cs
 A_Master.instance.SaveModSettings();
 ```
-## 12. SFSMultiplayer Edit
+## 13. SFSMultiplayer Edit
 Proceed to SFSMultiplayer found in Assembly-CSharp-firstpass, then to the parseData method. Copy/Paste the following code under this line:
 ```cs
 char c = '$';
@@ -149,7 +160,7 @@ foreach(string a in lastPlayersMet.Keys) {
 	}
 }
 ```
-## 13. SmartFoxHandler Edit
+## 14. SmartFoxHandler Edit
 Proceed to SmartFoxHandler's HandleUserEnterRoom method and paste the following code at the top. This sets our countdown for PvPUpdate to send updates when a user joins the room, it is done this way to prevent multiple users joining at once and causing a crash.
 ```cs
 try
@@ -162,4 +173,61 @@ try
 	catch (Exception)
 	{
 	}
+```
+## 15. Implementing Damage Numbers and Tracers.
+This implementation is harder but easy to do with some searching. We need to find the method that contains the RayCast check for hitting players, enemies, or nothing, it looks similar to this.
+```cs
+private void DF34_76aef0c1433e15a6d16a7af7ff53d849f72105c4(object direction, object DF34_c3706496a498466304614facdf3df3facab92bd8, object force, object DF34_deea0477bade932bd6780926541d17d7d96cf018, object crit, object range, object DF34_9547af042872a3167e0d5c5ef2c3b5dd83639e5d)
+```
+The first change we need to make is under this if statement, it will look the same, we need this for the tracers.
+```cs
+if (Physics.Raycast(this.gNozz.transform.position, (Vector3)direction, out raycastHit, RuntimeServices.UnboxSingle(range), num))
+```
+Paste the following code at the top of it:
+```cs
+if (A_Master.instance.getTracers() && this.playerNum == 0)
+			{
+				((A_Tracer)new GameObject("TracerGO").AddComponent(typeof(A_Tracer))).CreateProjectileLine(this.gNozz.transform.position, direction2, Vector3.Distance(raycastHit.point, this.gNozz.transform.position));
+			}
+```
+The second change we need to make is under a collider.CompareTag check which looks like this. We need this for the damage numbers.
+```cs
+if (raycastHit.collider.CompareTag(DF34_cb3702026e3b238888511d123c370319a167f1b3.DF34_bbac4ace293db48e4ef5fc061327880324aef45cf()))
+```
+Or for reference, written as in english:
+```cs
+if (raycastHit.collider.CompareTag("Enemy"))
+```
+Once we find this check, paste the following code at the top of it.
+```cs
+if (A_Master.instance.getDMGNumbers() && this.playerNum == 0)
+				{
+					A_DMGNum a_DMGNum = (A_DMGNum)new GameObject("newDMGNumGO").AddComponent(typeof(A_DMGNum));
+					a_DMGNum.damageValue = RuntimeServices.UnboxSingle(DF34_c3706496a498466304614facdf3df3facab92bd8);
+					a_DMGNum.numberScreenPosition = A_Master.instance.getMainCamera().WorldToScreenPoint(raycastHit.point);
+					a_DMGNum.damageCritValue = RuntimeServices.UnboxSingle(crit);
+				}
+```
+Finally, to add tracers for missed shots, add an else if after the following if block:
+```cs
+if (Physics.Raycast(this.gNozz.transform.position, (Vector3)direction, out raycastHit, RuntimeServices.UnboxSingle(range), num))
+```
+Code to place:
+```cs
+else if (A_Master.instance.getTracers() && this.playerNum == 0)
+		{
+			((A_Tracer)new GameObject("TracerGO").AddComponent(typeof(A_Tracer))).CreateProjectileLine(this.gNozz.transform.position, (Vector3)direction, RuntimeServices.UnboxSingle(range));
+		}
+```
+## 16. Implementing Perma Daytime
+I found this method by searching the obfuscated string for "Sun", it should look something like this.
+```cs
+public static void DF34_aef4c77c3fb9165115235c4a08ecc053e74e03c5(object DF34_b71f8c6d9e8cebcd927647c37613dec5027216f2)
+```
+At the top of this method once you find it, add the following code at the top.
+```cs
+if (A_Master.instance != null && A_Master.instance.getPermaDaytime() && (DF34_b71f8c6d9e8cebcd927647c37613dec5027216f2.Equals("night") || DF34_b71f8c6d9e8cebcd927647c37613dec5027216f2.Equals("rain") || DF34_b71f8c6d9e8cebcd927647c37613dec5027216f2.Equals("fog")))
+		{
+			DF34_b71f8c6d9e8cebcd927647c37613dec5027216f2 = "day";
+		}
 ```
