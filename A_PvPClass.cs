@@ -131,10 +131,10 @@ public class A_PvPClass : MonoBehaviour
 					GUI.Label(new Rect((float)(Screen.width - 165), num, 165f, 20f), value.getName(), guistyle);
 					num += 20f;
 					GUI.color = Color.cyan;
-					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getArmour(), 5f), A_PvPClass.barTexture);
+					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getArmour(), 5f), A_Master.barTexture);
 					num += 10f;
 					GUI.color = DFHUD.DF34_51b9424922e895314a865e16d9dff24aae525426;
-					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getHP(), 5f), A_PvPClass.barTexture);
+					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.getHP(), 5f), A_Master.barTexture);
 					GUI.color = Color.white;
 					num += 20f;
 				}
@@ -192,9 +192,6 @@ public class A_PvPClass : MonoBehaviour
 
 	//Dictionary storing Players who entered our instance with the modpack.
 	private Dictionary<string, A_PlayerClass> playersOnScreen = new Dictionary<string, A_PlayerClass>(20);
-
-	//Bar Texture, Move this to Master.
-	public static Texture2D barTexture;
 
 	//Integer storing the lastHP update.
 	private int lastHP;
