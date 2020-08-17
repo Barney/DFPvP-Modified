@@ -40,14 +40,14 @@ try {
 }
 catch (Exception) {}
 ```
-## 13. SFSMultiplayer Edit
+## 9. SFSMultiplayer Edit
 Proceed to SFSMultiplayer found in Assembly-CSharp-firstpass, then to the parseData method. Copy/Paste the following code at the top:
 ```cs
 if (A_PvPClass.isEnabledAndNotNull()) {
 	A_PvPClass.instance.ParsePvPData(message, sender);
 }
 ```
-## 14. SmartFoxHandler Edit
+## 10. SmartFoxHandler Edit
 Proceed to SmartFoxHandler's SendMPData (Hashtable,bool) as parameters. method and paste the following code above the if(leave) check.
 ```cs
 if (A_PvPClass.isEnabledAndNotNull()) {
@@ -57,7 +57,7 @@ if (A_PvPClass.isEnabledAndNotNull()) {
 	}
 }
 ```
-## 15. Implementing ApplyDamage Function.
+## 11. Implementing ApplyDamage Function.
 Search Damage Reduction and implement the following code inside that if check. Damage is the first parameter in the function. Make sure to do this after the multiplier.
 ```cs
 if (A_PvPClass.isEnabledAndNotNull()) {
