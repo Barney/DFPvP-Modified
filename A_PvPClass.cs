@@ -19,41 +19,6 @@ public class A_PvPClass : MonoBehaviour
 		UnityEngine.Object.DontDestroyOnLoad(base.gameObject);
 	}
 
-	private void SendUpdate(string text)
-	{
-		try
-		{
-			this.smartFoxObject.SendUserUpdate(text);
-		}
-		catch (Exception ex)
-		{
-			this.SendError("SendUpdate() - " + ex.StackTrace);
-		}
-	}
-
-	private void DetermineBarColor(float a)
-	{
-		if (a >= 75f)
-		{
-			GUI.color = A_Master.GREEN;
-			return;
-		}
-		if (a < 75f)
-		{
-			GUI.color = A_Master.YELLOW;
-			return;
-		}
-		if (a < 50f)
-		{
-			GUI.color = A_Master.ORANGE;
-			return;
-		}
-		if (a < 25f)
-		{
-			GUI.color = A_Master.RED;
-		}
-	}
-
 	private void OnGUI()
 	{
 		try
@@ -190,13 +155,9 @@ public class A_PvPClass : MonoBehaviour
 
 	public static A_PvPClass instance;
 
-	public string[] lastUpdateValues = new string[3];
-
 	public Dictionary<string, A_PlayerClass> playersOnScreen = new Dictionary<string, A_PlayerClass>(20);
 
 	public static Texture2D barTexture;
-
-	private int lastHP;
 
 	public SFSMultiplayer smartFoxObject;
 
