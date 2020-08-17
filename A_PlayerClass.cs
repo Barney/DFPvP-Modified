@@ -125,7 +125,7 @@ public class A_PvPClass : MonoBehaviour
 	public string PvPHitTaken()
 	{
 		//Send damage update and clear the data for the next update
-		string result = "|C$" + this.damageTaken + "^" + "(" + getMainPlayer().transform.position.x + "," + 2 + "," + getMainPlayer().transform.position.z + ")";
+		string result = "|C$" + this.damageTaken + "^" + "(" + A_Master.instance.getMainPlayer().transform.position.x + "," + 2 + "," + A_Master.instance.getMainPlayer().transform.position.z + ")";
 
 		this.damageTaken = 0;
 		this.wasHit = false;
