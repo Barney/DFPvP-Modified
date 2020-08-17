@@ -1,33 +1,207 @@
 using System;
+using System.Collections.Generic;
+using SmartFoxClientAPI.Data;
+using UnityEngine;
 
-///<summary>Class used to define a player and some variables relating to a player. This class is used by the A_PvPClass and constructors
-///initialized within SFSMultiplayer's parseData method.</summary>
-public class A_PlayerClass
+public class A_PvPClass : MonoBehaviour
 {
-	///<summary>Constructor used to create a player.</summary>
-	public A_PlayerClass(string name, int hp = 0, int armour = 0, int userID = -1)
+	private void Awake()
 	{
-		this.name = name;
-		this.hp = hp;
-		this.armour = armour;
-		this.userID = userID;
+		if (A_PvPClass.instance == null)
+		{
+			A_PvPClass.instance = this;
+			A_Master.instance.WriteToOutputLog("PvP Class initialized.");
+		}
+		else if (A_PvPClass.instance != this)
+		{
+			UnityEngine.Object.Destroy(base.gameObject);
+		}
+		UnityEngine.Object.DontDestroyOnLoad(base.gameObject);
 	}
-	/*Setters for each datafield as accessing datafields directly in dnSpy is dangerous, this allows me to limit direct datafield
-	//access to strictly within the class.*/
-	public void setName(string name){ this.name = name; }
-	public void setHP(int hp){ this.hp = hp; }
-	public void setArmour(int armour){ this.armour = armour; }
-	public void setUserID(int id) { this.userID = id; }
 
-	//Getters for each datafield for the same reason as setters.
-	public string getName(){ return this.name; }
-	public int getHP(){ return this.hp; }
-	public int getArmour(){ return this.armour; }
-	public int getUserID(){ return this.userID; }
+	private void SendUpdate(string text)
+	{
+		try
+		{
+			this.smartFoxObject.SendUserUpdate(text);
+		}
+		catch (Exception ex)
+		{
+			this.SendError("SendUpdate() - " + ex.StackTrace);
+		}
+	}
 
-	//Datafields accessed directly only from this class.
-	private string name;
-	private int hp;
-	private int armour;
-	private int userID;
+	private void DetermineBarColor(float a)
+	{
+		if (a >= 75f)
+		{
+			GUI.color = A_Master.GREEN;
+			return;
+		}
+		if (a < 75f)
+		{
+			GUI.color = A_Master.YELLOW;
+			return;
+		}
+		if (a < 50f)
+		{
+			GUI.color = A_Master.ORANGE;
+			return;
+		}
+		if (a < 25f)
+		{
+			GUI.color = A_Master.RED;
+		}
+	}
+
+	private void OnGUI()
+	{
+		try
+		{
+			float num = 200f;
+			GUIStyle guistyle = new GUIStyle();
+			guistyle.font = DFHUD.hudFont;
+			guistyle.normal.textColor = A_Master.RED;
+			new GUIStyle().font = DFHUD.miniFont;
+			foreach (KeyValuePair<string, A_PlayerClass> pair in this.playersOnScreen)
+			{
+				A_PlayerClass value = pair.Value;
+				if (this.smartFoxObject != null && this.smartFoxObject.UsersInInstance.Contains(value.userID))
+				{
+					GUI.Label(new Rect((float)(Screen.width - 165), num, 100f, 20f), value.name, guistyle);
+					num += 20f;
+					GUI.color = A_Master.RED;
+					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.hp, 5f), A_PvPClass.barTexture);
+					num += 10f;
+					GUI.color = Color.cyan;
+					GUI.DrawTexture(new Rect((float)(Screen.width - 165), num, (float)value.armour, 5f), A_PvPClass.barTexture);
+					GUI.color = Color.white;
+					num += 20f;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			this.SendError("OnGUI() - " + ex.StackTrace);
+		}
+	}
+
+	public static bool isEnabledAndNotNull()
+	{
+		return A_PvPClass.instance != null && A_PvPClass.instance.enabled;
+	}
+
+	private void OnEnable()
+	{
+		A_Master.instance.WriteToOutputLog("PvP Features have been enabled!");
+	}
+
+	private void OnDisable()
+	{
+		A_Master.instance.WriteToOutputLog("PvP Features have been disabled!");
+		base.StopAllCoroutines();
+	}
+
+	private void Update()
+	{
+		if (this.smartFoxObject == null)
+		{
+			this.smartFoxObject = (SFSMultiplayer)GameObject.Find("SmartFoxObject").GetComponent(typeof(SFSMultiplayer));
+		}
+	}
+
+	private void SendError(string message)
+	{
+		A_Master.instance.WriteToOutputLog("ERROR in A_PvPClass: " + message);
+	}
+
+	public string PvPHPUpdate()
+	{
+		string hp = DFHUD.DF34_e87ba399deaf3e82d6243a9eb1337765fd97817c.ToString();
+		string ar = DFHUD.DF34_d54a5b283003efb3ba74882767bb88a6054bd95f.ToString();
+		return "|B$" + hp + "^" + ar;
+	}
+
+	public string PvPHitTaken()
+	{
+		//Send damage update and clear the data for the next update
+		string result = "|C$" + this.damageTaken + "^" + "(" + getMainPlayer().transform.position.x + "," + 2 + "," + getMainPlayer().transform.position.z + ")";
+
+		this.damageTaken = 0;
+		this.wasHit = false;
+		return result;
+	}
+
+	public void ApplyDamage(int damageTaken)
+	{
+		this.damageTaken += damageTaken;
+		this.wasHit = true;
+	}
+
+	public bool WasHit()
+	{
+		return this.wasHit;
+	}
+
+	public void ParsePvPData(string message, User sender)
+	{
+		//A_Master.instance.WriteToOutputLog("Message from: " + sender.GetName() + " is: " + message);
+		int indexHPUpdate = message.IndexOf("|B$");
+		if (indexHPUpdate > -1)
+		{
+			//A_Master.instance.WriteToOutputLog("We have the HP Update Data");
+			string[] percentages = message.Substring(indexHPUpdate + 3).Split('|')[0].Split('^');
+			//A_Master.instance.WriteToOutputLog("Name: " + sender.GetName() + " HP Percent: " + Convert.ToInt32(percentages[0]) + " Armour Percent: " + Convert.ToInt32(percentages[1]));
+		
+			if (!this.playersOnScreen.ContainsKey(sender.GetName()))
+			{
+				this.playersOnScreen.Add(sender.GetName(), new A_PlayerClass(sender.GetName(), Convert.ToInt32(percentages[0]), Convert.ToInt32(percentages[1]), "Nobody", sender.GetId()));
+			}
+			else
+			{
+				A_PlayerClass a_PlayerClass = A_PvPClass.instance.playersOnScreen[sender.GetName()];
+				a_PlayerClass.hp = Convert.ToInt32(percentages[0]);
+				a_PlayerClass.armour = Convert.ToInt32(percentages[1]);
+				a_PlayerClass.lastHitBy = "Nobody";
+				a_PlayerClass.userID = sender.GetId();
+				A_PvPClass.instance.playersOnScreen[sender.GetName()] = a_PlayerClass;
+			}
+			//Check for Hit Data
+			int hitTakenUpdate = message.IndexOf("|C$");
+			if (hitTakenUpdate > -1)
+			{
+				//A_Master.instance.WriteToOutputLog("We have a damage update");
+				string[] damageData = message.Substring(hitTakenUpdate + 3).Split('|')[0].Split('^');
+				string damageNum = damageData[0];
+				//A_Master.instance.WriteToOutputLog("Damage is: " + damageNum + " Coordinates are: " + damageData[1]);
+				string[] coordinateData = damageData[1].TrimStart('(').TrimEnd(')').Split(',');
+				float x = Convert.ToSingle(coordinateData[0]);
+				float y = Convert.ToSingle(coordinateData[1]);
+				float z = Convert.ToSingle(coordinateData[2]);
+				//A_Master.instance.WriteToOutputLog("X: " + x + " Y: " + y + " Z: " + z);
+				
+				//Do damage number
+				A_DMGNum a_DMGNum = (A_DMGNum)new GameObject("newDMGNumGO").AddComponent(typeof(A_DMGNum));
+				a_DMGNum.damageCritValue = Convert.ToSingle(damageNum);
+				a_DMGNum.damageValue = Convert.ToSingle(damageNum);
+				a_DMGNum.numberScreenPosition = Camera.mainCamera.WorldToScreenPoint(new Vector3(x, y, z));
+			}
+		}
+	}
+
+	public static A_PvPClass instance;
+
+	public string[] lastUpdateValues = new string[3];
+
+	public Dictionary<string, A_PlayerClass> playersOnScreen = new Dictionary<string, A_PlayerClass>(20);
+
+	public static Texture2D barTexture;
+
+	private int lastHP;
+
+	public SFSMultiplayer smartFoxObject;
+
+	private int damageTaken;
+
+	private bool wasHit;
 }
