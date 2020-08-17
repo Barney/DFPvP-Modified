@@ -155,14 +155,13 @@ public class A_PvPClass : MonoBehaviour
 		
 			if (!this.playersOnScreen.ContainsKey(sender.GetName()))
 			{
-				this.playersOnScreen.Add(sender.GetName(), new A_PlayerClass(sender.GetName(), Convert.ToInt32(percentages[0]), Convert.ToInt32(percentages[1]), "Nobody", sender.GetId()));
+				this.playersOnScreen.Add(sender.GetName(), new A_PlayerClass(sender.GetName(), Convert.ToInt32(percentages[0]), Convert.ToInt32(percentages[1]), sender.GetId()));
 			}
 			else
 			{
 				A_PlayerClass a_PlayerClass = A_PvPClass.instance.playersOnScreen[sender.GetName()];
 				a_PlayerClass.hp = Convert.ToInt32(percentages[0]);
 				a_PlayerClass.armour = Convert.ToInt32(percentages[1]);
-				a_PlayerClass.lastHitBy = "Nobody";
 				a_PlayerClass.userID = sender.GetId();
 				A_PvPClass.instance.playersOnScreen[sender.GetName()] = a_PlayerClass;
 			}
