@@ -93,19 +93,17 @@ public class A_PvPClass : MonoBehaviour
 		string result = "|C$" + this.damageTaken + "^" + "(" + A_Master.instance.getMainPlayer().transform.position.x + "," + 2 + "," + A_Master.instance.getMainPlayer().transform.position.z + ")";
 
 		this.damageTaken = 0;
-		this.wasHit = false;
 		return result;
 	}
 
 	public void ApplyDamage(int damageTaken)
 	{
 		this.damageTaken += damageTaken;
-		this.wasHit = true;
 	}
 
 	public bool WasHit()
 	{
-		return this.wasHit;
+		return this.damageTaken > 0;
 	}
 
 	public void ParsePvPData(string message, User sender)
@@ -162,6 +160,4 @@ public class A_PvPClass : MonoBehaviour
 	public SFSMultiplayer smartFoxObject;
 
 	private int damageTaken;
-
-	private bool wasHit;
 }
